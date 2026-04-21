@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecideNow — Free Random & Decision Tools</title>
+<meta name="description" content="Free online decision tools. Flip a coin, spin a wheel, generate random numbers and more. No signup, no ads, instant results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2330;
+    --text: #f0f2f7;
+    --muted: #6b7280;
+    --accent: #f5c842;
+    --border: rgba(255,255,255,0.07);
+    --radius: 20px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Background grid ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glow orbs ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+  .orb-1 { width: 600px; height: 600px; background: #f5c842; top: -200px; right: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: #6366f1; bottom: 100px; left: -150px; }
+
+  /* ── Nav ── */
+  nav {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 24px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .logo em {
+    font-style: normal;
+    color: rgba(245,200,66,0.45);
+    font-size: 18px;
+  }
+  .nav-cta {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: rgba(245,200,66,0.1);
+    border: 1px solid rgba(245,200,66,0.25);
+    color: var(--accent);
+    border-radius: 100px;
+    padding: 9px 22px;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .nav-cta:hover { background: rgba(245,200,66,0.18); }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 80px 24px 100px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,200,66,0.08);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: 100px;
+    padding: 7px 18px;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge::before { content: '✦'; font-size: 10px; }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(44px, 8vw, 88px);
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 1.0;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero h1 .line1 { display: block; color: var(--text); }
+  .hero h1 .line2 {
+    display: block;
+    color: var(--accent);
+    position: relative;
+  }
+  .hero h1 .line2::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    border-radius: 2px;
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto 48px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    background: var(--accent);
+    color: #1a1200;
+    border: none;
+    border-radius: 100px;
+    padding: 16px 40px;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 32px rgba(245,200,66,0.3);
+    display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,200,66,0.45); }
+
+  .btn-secondary {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 16px 40px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    max-width: 600px;
+    margin: 0 auto 100px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0;
+    overflow: hidden;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat-item {
+    flex: 1;
+    padding: 16px 24px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-big {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .stat-sm { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Section heading ── */
+  .section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 320px;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  /* ── Tool cards ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 80px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-decoration: none;
+    display: block;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, var(--card-glow, rgba(245,200,66,0.06)), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .tool-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .tool-card:hover::before { opacity: 1; }
+
+  .tool-card.featured {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #1a1e2a 0%, #161920 100%);
+    border-color: rgba(245,200,66,0.15);
+  }
+
+  .card-inner { position: relative; z-index: 1; }
+
+  .card-icon {
+    font-size: 44px;
+    display: block;
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 100px;
+    padding: 4px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .badge-popular { background: rgba(245,200,66,0.12); color: var(--accent); border: 1px solid rgba(245,200,66,0.2); }
+  .badge-new { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+  .badge-free { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+
+  .card-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    color: var(--muted);
+  }
+
+  .card-arrow {
+    position: absolute;
+    bottom: 32px;
+    right: 32px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .tool-card:hover .card-arrow {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a1200;
+    transform: translate(2px, -2px);
+  }
+
+  /* Coming soon cards */
+  .tool-card.coming-soon {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+  }
+  .tool-card.coming-soon:hover { transform: none; box-shadow: none; }
+
+  /* ── Why section ── */
+  .why-section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto 100px;
+    padding: 0 24px;
+  }
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .why-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .why-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+  .why-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .why-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ── SEO Content ── */
+  .seo-section {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto 100px;
+    padding: 0 24px;
+  }
+  .seo-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .seo-section p { font-size: 16px; color: #9ca3af; line-height: 1.75; margin-bottom: 14px; }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 16px;
+    text-decoration: none;
+  }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .footer-links a {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { font-size: 13px; color: #374151; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .tool-card.featured { grid-column: span 1; }
+    .hero { padding: 60px 24px 80px; }
+    .stats-strip { flex-direction: column; border-radius: var(--radius); }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+    .section-sub { text-align: left; }
+    .hero h1 { letter-spacing: -2px; }
+  }
+</style>
+
+  <!-- ============================================================
+       GOOGLE ADSENSE — replace ca-pub-XXXXXXXXXXXXXXXX with your
+       actual Publisher ID from adsense.google.com
+  ============================================================ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  <!-- AdSense ad-unit styles -->
+  <style>
+    .ad-unit {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      text-align: center;
+    }
+    .ad-unit ins { display: block; }
+    .ad-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(128,128,128,0.5);
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="/" class="logo">Decide<em>Now</em></a>
+  <a href="#tools" class="nav-cta">Browse Tools ↓</a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">Free forever · No signup · Instant results</div>
+  <h1>
+    <span class="line1">Make decisions.</span>
+    <span class="line2">Leave it to chance.</span>
+  </h1>
+  <p class="hero-sub">Free online tools for random decisions, fair picks, and everything in between. Used by teachers, streamers, and anyone who can't make up their mind.</p>
+  <div class="hero-actions">
+    <a href="#tools" class="btn-primary">Explore Tools</a>
+    <a href="/picker-wheel.html" class="btn-secondary">Try Spin Wheel →</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-strip reveal">
+  <div class="stat-item">
+    <span class="stat-big">100%</span>
+    <span class="stat-sm">Free</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-big">3+</span>
+    <span class="stat-sm">Tools</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-big">0</span>
+    <span class="stat-sm">Signups needed</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-big">∞</span>
+    <span class="stat-sm">Uses</span>
+  </div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1111111111"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!-- Tools -->
+<div class="section" id="tools">
+  <div class="section-header reveal">
+    <div class="section-title">All Tools</div>
+    <div class="section-sub">Every tool is free, instant, and works on any device.</div>
+  </div>
+
+  <div class="tools-grid">
+
+    <!-- Spin Wheel — featured -->
+    <a href="/picker-wheel.html" class="tool-card featured reveal" style="--card-glow: rgba(245,200,66,0.08)">
+      <div class="card-inner">
+        <span class="card-icon">🎡</span>
+        <div class="card-top">
+          <span class="card-title">Spin Wheel</span>
+          <span class="card-badge badge-popular">Most Popular</span>
+        </div>
+        <p class="card-desc">Add your own choices and spin for a random result. Perfect for classroom name-picking, giveaways, deciding what to eat, or any group decision.</p>
+        <div class="card-tags">
+          <span class="tag">Custom entries</span>
+          <span class="tag">Giveaways</span>
+          <span class="tag">Classroom</span>
+          <span class="tag">Decisions</span>
+        </div>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Coin Flip -->
+    <a href="/coin-flip.html" class="tool-card reveal" style="--card-glow: rgba(245,200,66,0.07)">
+      <div class="card-inner">
+        <span class="card-icon">🪙</span>
+        <div class="card-top">
+          <span class="card-title">Coin Flip</span>
+          <span class="card-badge badge-free">Free</span>
+        </div>
+        <p class="card-desc">Instant heads or tails. Tracks your flip history and running totals. Cryptographically random — guaranteed 50/50.</p>
+        <div class="card-tags">
+          <span class="tag">Heads or tails</span>
+          <span class="tag">Statistics</span>
+          <span class="tag">History</span>
+        </div>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Random Number -->
+    <a href="/random-number.html" class="tool-card reveal" style="--card-glow: rgba(99,102,241,0.07)">
+      <div class="card-inner">
+        <span class="card-icon">🎲</span>
+        <div class="card-top">
+          <span class="card-title">Random Number</span>
+          <span class="card-badge badge-free">Free</span>
+        </div>
+        <p class="card-desc">Generate random numbers in any range. Dice, 1–100, lottery numbers, or any custom range. Generate multiple at once.</p>
+        <div class="card-tags">
+          <span class="tag">Any range</span>
+          <span class="tag">Dice roller</span>
+          <span class="tag">Lottery</span>
+        </div>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Coming soon cards -->
+    <div class="tool-card coming-soon reveal">
+      <div class="card-inner">
+        <span class="card-icon">🎱</span>
+        <div class="card-top">
+          <span class="card-title">Magic 8 Ball</span>
+          <span class="card-badge badge-new">Coming Soon</span>
+        </div>
+        <p class="card-desc">Ask a yes/no question and shake for an answer. 20 classic responses, just like the original.</p>
+        <div class="card-tags">
+          <span class="tag">Yes/no</span>
+          <span class="tag">Decisions</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card coming-soon reveal">
+      <div class="card-inner">
+        <span class="card-icon">🍽️</span>
+        <div class="card-top">
+          <span class="card-title">What Should I Eat?</span>
+          <span class="card-badge badge-new">Coming Soon</span>
+        </div>
+        <p class="card-desc">A pre-loaded food wheel with cuisines and meal ideas. Spin to settle the eternal dinner debate.</p>
+        <div class="card-tags">
+          <span class="tag">Food</span>
+          <span class="tag">Meal picker</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Why section -->
+<div class="why-section">
+  <div class="section-header reveal">
+    <div class="section-title">Why DecideNow?</div>
+  </div>
+  <div class="why-grid">
+    <div class="why-card reveal">
+      <span class="why-icon">🔐</span>
+      <div class="why-title">Truly random</div>
+      <div class="why-desc">Every result uses <code>crypto.getRandomValues()</code> — cryptographic randomness, not the biased Math.random() other tools use.</div>
+    </div>
+    <div class="why-card reveal">
+      <span class="why-icon">⚡</span>
+      <div class="why-title">Instant, no friction</div>
+      <div class="why-desc">No account. No email. No app to install. Open the page, use the tool, done. Works on every device.</div>
+    </div>
+    <div class="why-card reveal">
+      <span class="why-icon">🆓</span>
+      <div class="why-title">Free forever</div>
+      <div class="why-desc">Every tool on this site is completely free. No premium tiers, no usage limits, no hidden paywalls.</div>
+    </div>
+    <div class="why-card reveal">
+      <span class="why-icon">📱</span>
+      <div class="why-title">Mobile-first</div>
+      <div class="why-desc">Designed to work perfectly on phones and tablets. Tap-friendly, fast-loading, no zooming required.</div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="2222222222"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- SEO Content -->
+<div class="seo-section">
+  <h2 class="reveal">Free random decision tools</h2>
+  <p>DecideNow is a collection of free online tools for random decisions and fair picks. Whether you need to flip a coin, spin a wheel, or generate a random number, every tool here is instant, accurate, and completely free.</p>
+  <p>Our tools are used by teachers picking students at random, streamers running live giveaways, families settling dinner debates, and anyone who wants a fast, fair, unbiased result without downloading an app or creating an account.</p>
+  <p>Unlike most online tools, DecideNow uses <code>crypto.getRandomValues()</code> — the same cryptographic randomness used in browser security — instead of JavaScript's standard Math.random(), which can produce subtly biased results over many uses.</p>
+</div>
+
+<!-- Footer -->
+<footer>
+  <a href="/" class="footer-logo">DecideNow</a>
+  <div class="footer-links">
+    <a href="/coin-flip.html">Coin Flip</a>
+    <a href="/picker-wheel.html">Spin Wheel</a>
+    <a href="/random-number.html">Random Number</a>
+  </div>
+  <div class="footer-copy">© 2025 DecideNow · Free online decision tools</div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

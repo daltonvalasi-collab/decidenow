@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Flip — Free Online Heads or Tails</title>
+<meta name="description" content="Flip a coin online. Free, instant, and truly random heads or tails. No ads, no signup. Great for decisions, games, and classrooms.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --heads: #f5c842;
+    --tails: #c0c8d8;
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2330;
+    --text: #f0f2f7;
+    --muted: #6b7280;
+    --accent: #f5c842;
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 60px;
+  }
+
+  /* Nav */
+  nav {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 60px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Coin Stage */
+  .stage {
+    perspective: 1000px;
+    margin-bottom: 48px;
+    cursor: pointer;
+  }
+
+  .coin-wrap {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.05s;
+  }
+
+  .coin-wrap.flipping {
+    animation: coinFlip var(--duration, 1.4s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes coinFlip {
+    0%   { transform: rotateX(0deg) translateY(0px); }
+    20%  { transform: rotateX(360deg) translateY(-40px); }
+    40%  { transform: rotateX(720deg) translateY(-70px); }
+    60%  { transform: rotateX(1080deg) translateY(-40px); }
+    80%  { transform: rotateX(1440deg) translateY(-10px); }
+    90%  { transform: rotateX(var(--end-rot, 1620deg)) translateY(-2px); }
+    100% { transform: rotateX(var(--end-rot, 1620deg)) translateY(0px); }
+  }
+
+  .coin-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .coin-heads {
+    background: radial-gradient(circle at 35% 35%, #ffe97a, #f5c842 50%, #b8902a);
+    color: #5a3e00;
+    box-shadow: 0 0 0 6px #b8902a, 0 20px 60px rgba(245,200,66,0.3);
+  }
+  .coin-heads .coin-icon { font-size: 52px; }
+
+  .coin-tails {
+    background: radial-gradient(circle at 35% 35%, #e8ecf4, #c0c8d8 50%, #8892a4);
+    color: #3a4050;
+    transform: rotateX(180deg);
+    box-shadow: 0 0 0 6px #8892a4, 0 20px 60px rgba(192,200,216,0.2);
+  }
+  .coin-tails .coin-icon { font-size: 52px; }
+
+  /* Result */
+  .result-display {
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  .result-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .result-label.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .result-label.heads { color: var(--heads); }
+  .result-label.tails { color: #c0c8d8; }
+  .result-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.3s 0.1s;
+  }
+  .result-sub.show { opacity: 1; }
+
+  /* Buttons */
+  .btn-flip {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: var(--accent);
+    color: #1a1200;
+    border: none;
+    border-radius: 100px;
+    padding: 18px 56px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 32px rgba(245,200,66,0.35);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto 16px;
+  }
+  .btn-flip:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,200,66,0.45); }
+  .btn-flip:active { transform: translateY(0); }
+  .btn-flip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-reset {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--muted);
+    border-radius: 100px;
+    padding: 10px 28px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: block;
+    margin: 0 auto;
+  }
+  .btn-reset:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+    margin: 48px auto 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .stat-num.heads { color: var(--heads); }
+  .stat-num.tails { color: #c0c8d8; }
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* History */
+  .history {
+    margin-top: 32px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .history-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .history-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0;
+  }
+  .dot.h { background: rgba(245,200,66,0.2); color: var(--heads); border: 1px solid rgba(245,200,66,0.3); }
+  .dot.t { background: rgba(192,200,216,0.15); color: #c0c8d8; border: 1px solid rgba(192,200,216,0.2); }
+
+  /* SEO Content */
+  .content {
+    max-width: 620px;
+    width: 100%;
+    margin-top: 80px;
+  }
+  .content h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .content p, .content li {
+    font-size: 16px;
+    line-height: 1.75;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+  .faq { margin-top: 48px; }
+  .faq-item {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 20px 0;
+  }
+  .faq-item h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  /* Other Tools */
+  .other-tools {
+    max-width: 620px;
+    width: 100%;
+    margin-top: 64px;
+  }
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .tool-card:hover { border-color: rgba(245,200,66,0.3); background: var(--surface2); }
+  .tool-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .tool-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .tool-desc { font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    .hero h1 { font-size: 36px; letter-spacing: -1px; }
+    .stats { max-width: 100%; }
+  }
+</style>
+
+  <!-- ============================================================
+       GOOGLE ADSENSE — replace ca-pub-XXXXXXXXXXXXXXXX with your
+       actual Publisher ID from adsense.google.com
+  ============================================================ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  <!-- AdSense ad-unit styles -->
+  <style>
+    .ad-unit {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      text-align: center;
+    }
+    .ad-unit ins { display: block; }
+    .ad-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(128,128,128,0.5);
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">DecideNow</a>
+  <div class="nav-links">
+    <a href="/coin-flip.html">Coin Flip</a>
+    <a href="/picker-wheel.html">Spin Wheel</a>
+    <a href="/random-number.html">Random Number</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Flip a <span>Coin</span></h1>
+  <p>Instant heads or tails. Truly random. Always free.</p>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="3333333333"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- Coin -->
+<div class="stage" id="stage" onclick="flip()" title="Click to flip">
+  <div class="coin-wrap" id="coin">
+    <div class="coin-face coin-heads">
+      <span class="coin-icon">🪙</span>
+      <span>HEADS</span>
+    </div>
+    <div class="coin-face coin-tails">
+      <span class="coin-icon">⭐</span>
+      <span>TAILS</span>
+    </div>
+  </div>
+</div>
+
+<div class="result-display">
+  <div class="result-label" id="resultLabel">—</div>
+  <div class="result-sub" id="resultSub">Flip to get started</div>
+</div>
+
+<button class="btn-flip" id="flipBtn" onclick="flip()">
+  Flip Coin
+</button>
+<button class="btn-reset" onclick="resetStats()">Reset stats</button>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-card">
+    <span class="stat-num heads" id="headsCount">0</span>
+    <span class="stat-label">Heads</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num" id="totalCount" style="color:var(--text)">0</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num tails" id="tailsCount">0</span>
+    <span class="stat-label">Tails</span>
+  </div>
+</div>
+
+<!-- History -->
+<div class="history" id="historySection" style="display:none">
+  <div class="history-label">Last 20 flips</div>
+  <div class="history-dots" id="historyDots"></div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="4444444444"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- SEO Content -->
+<div class="content">
+  <h2>About this coin flip tool</h2>
+  <p>This free online coin flip uses <code>crypto.getRandomValues()</code> — the same cryptographically secure randomness your browser uses for security — to ensure every flip is genuinely 50/50. No patterns, no bias, no tricks.</p>
+  <p>Perfect for settling disputes, making quick decisions, classroom activities, game night, sports team selection, and anywhere you need a fair random result.</p>
+
+  <div class="faq">
+    <div class="faq-item">
+      <h3>Is this coin flip truly random?</h3>
+      <p>Yes. We use <code>crypto.getRandomValues()</code>, a cryptographically secure random number generator built into your browser. It's the same method used for SSL certificates and encryption. Every flip is independent — past results never influence future ones.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I flip multiple times quickly?</h3>
+      <p>Yes — just click the button or tap the coin repeatedly. Each flip is instant and independent. Your full history and running totals are tracked on this page.</p>
+    </div>
+    
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="5555555555"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+    <div class="faq-item">
+      <h3>Is this free to use?</h3>
+      <p>Completely free, no account needed, no limits on how many times you flip.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Does it work on mobile?</h3>
+      <p>Yes — just tap the coin or the Flip Coin button. Works on all modern phones and tablets.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Other Tools -->
+<div class="other-tools">
+  <div class="history-label">More free tools</div>
+  <div class="tools-grid">
+    <a href="/picker-wheel.html" class="tool-card">
+      <span class="tool-icon">🎡</span>
+      <span class="tool-name">Spin Wheel</span>
+      <span class="tool-desc">Custom entries, any choice</span>
+    </a>
+    <a href="/random-number.html" class="tool-card">
+      <span class="tool-icon">🎲</span>
+      <span class="tool-name">Random Number</span>
+      <span class="tool-desc">Pick any range instantly</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  let heads = 0, tails = 0, flipping = false;
+  const history = [];
+  const coin = document.getElementById('coin');
+  const flipBtn = document.getElementById('flipBtn');
+  const resultLabel = document.getElementById('resultLabel');
+  const resultSub = document.getElementById('resultSub');
+
+  function getRandom() {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % 2 === 0;
+  }
+
+  function flip() {
+    if (flipping) return;
+    flipping = true;
+    flipBtn.disabled = true;
+
+    resultLabel.classList.remove('show', 'heads', 'tails');
+    resultSub.classList.remove('show');
+
+    const isHeads = getRandom();
+    // Heads = 0deg face up, Tails = 180deg face up
+    const spins = 6 + Math.floor(getRandom() ? 2 : 1);
+    const endRot = isHeads ? spins * 360 : spins * 360 + 180;
+    const duration = 1.2 + Math.random() * 0.4;
+
+    coin.style.setProperty('--end-rot', endRot + 'deg');
+    coin.style.setProperty('--duration', duration + 's');
+    coin.classList.add('flipping');
+
+    setTimeout(() => {
+      coin.classList.remove('flipping');
+      coin.style.transform = `rotateX(${endRot}deg)`;
+      flipping = false;
+      flipBtn.disabled = false;
+
+      if (isHeads) {
+        heads++;
+        resultLabel.textContent = 'Heads!';
+        resultLabel.className = 'result-label heads show';
+        history.push('h');
+      } else {
+        tails++;
+        resultLabel.textContent = 'Tails!';
+        resultLabel.className = 'result-label tails show';
+        history.push('t');
+      }
+
+      const total = heads + tails;
+      const pct = Math.round((isHeads ? heads : tails) / total * 100);
+      resultSub.textContent = `${isHeads ? 'Heads' : 'Tails'} is ${pct}% of ${total} flip${total !== 1 ? 's' : ''}`;
+      resultSub.classList.add('show');
+
+      document.getElementById('headsCount').textContent = heads;
+      document.getElementById('tailsCount').textContent = tails;
+      document.getElementById('totalCount').textContent = total;
+
+      updateHistory();
+    }, duration * 1000);
+  }
+
+  function updateHistory() {
+    const section = document.getElementById('historySection');
+    const dots = document.getElementById('historyDots');
+    section.style.display = 'block';
+    const last20 = history.slice(-20);
+    dots.innerHTML = last20.map(r =>
+      `<div class="dot ${r}">${r === 'h' ? 'H' : 'T'}</div>`
+    ).join('');
+  }
+
+  function resetStats() {
+    heads = 0; tails = 0;
+    history.length = 0;
+    document.getElementById('headsCount').textContent = '0';
+    document.getElementById('tailsCount').textContent = '0';
+    document.getElementById('totalCount').textContent = '0';
+    document.getElementById('historySection').style.display = 'none';
+    resultLabel.className = 'result-label';
+    resultLabel.textContent = '—';
+    resultSub.className = 'result-sub';
+    resultSub.textContent = 'Flip to get started';
+    coin.style.transform = '';
+  }
+</script>
+</body>
+</html>

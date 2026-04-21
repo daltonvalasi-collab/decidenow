@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Number Generator — Free Online Tool</title>
+<meta name="description" content="Generate a random number between any two values. Free, instant, and truly random. Great for games, classrooms, lotteries, and decisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2330;
+    --text: #f0f2f7;
+    --muted: #6b7280;
+    --accent: #f5c842;
+    --green: #10b981;
+    --border: rgba(255,255,255,0.07);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 80px;
+  }
+
+  nav {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 60px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 17px; color: var(--muted); font-weight: 300; }
+
+  /* Big Number Display */
+  .number-display {
+    position: relative;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .big-number {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(80px, 18vw, 160px);
+    font-weight: 800;
+    letter-spacing: -6px;
+    line-height: 1;
+    color: var(--text);
+    display: block;
+    min-height: 1.1em;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .big-number.rolling {
+    animation: roll 0.08s steps(1) infinite;
+  }
+
+  @keyframes roll {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+
+  .number-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(ellipse at center, rgba(245,200,66,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .number-glow.active { opacity: 1; }
+
+  .range-hint {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .range-hint span { color: var(--accent); font-weight: 500; }
+
+  /* Range Controls */
+  .controls {
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 40px;
+  }
+
+  .range-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .range-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .range-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .range-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 22px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  .range-input::-webkit-outer-spin-button,
+  .range-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .range-input:focus { border-color: rgba(245,200,66,0.4); }
+
+  .range-sep {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    color: var(--muted);
+    text-align: center;
+    padding-top: 22px;
+  }
+
+  /* Quick presets */
+  .presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .preset-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 100px;
+    padding: 7px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .preset-btn:hover { border-color: rgba(245,200,66,0.3); color: var(--accent); }
+  .preset-btn.active { border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.08); color: var(--accent); }
+
+  /* Generate button */
+  .btn-generate {
+    width: 100%;
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    background: var(--accent);
+    color: #1a1200;
+    border: none;
+    border-radius: 100px;
+    padding: 18px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 32px rgba(245,200,66,0.3);
+    letter-spacing: 0.3px;
+    margin-bottom: 12px;
+  }
+  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,200,66,0.45); }
+  .btn-generate:active { transform: translateY(1px); }
+
+  .btn-multi {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-multi:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  /* Multi-number output */
+  .multi-output {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 20px;
+    display: none;
+  }
+  .multi-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .multi-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .multi-num {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .multi-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .multi-label { font-size: 14px; color: var(--muted); }
+  .multi-count {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    width: 70px;
+    text-align: center;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .multi-count::-webkit-outer-spin-button,
+  .multi-count::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* History */
+  .history-section {
+    width: 100%;
+    max-width: 520px;
+    margin-top: 40px;
+  }
+  .history-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .clear-hist {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.2s;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .clear-hist:hover { color: var(--text); }
+
+  .history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hist-num {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .hist-num:first-child { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  /* Stats bar */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 520px;
+    margin-top: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-n {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* SEO */
+  .content {
+    max-width: 620px;
+    width: 100%;
+    margin-top: 80px;
+  }
+  .content h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.5px; }
+  .content p { font-size: 16px; line-height: 1.75; color: #9ca3af; margin-bottom: 12px; }
+  .faq { margin-top: 40px; }
+  .faq-item { border-top: 1px solid var(--border); padding: 20px 0; }
+  .faq-item h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 20px; }
+  .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-decoration: none; transition: border-color 0.2s; }
+  .tool-card:hover { border-color: rgba(245,200,66,0.3); }
+  .tool-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .tool-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); display: block; margin-bottom: 4px; }
+  .tool-desc { font-size: 12px; color: var(--muted); }
+  .section-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    .hero h1 { font-size: 32px; letter-spacing: -1px; }
+    .big-number { font-size: 100px; letter-spacing: -4px; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+
+  <!-- ============================================================
+       GOOGLE ADSENSE — replace ca-pub-XXXXXXXXXXXXXXXX with your
+       actual Publisher ID from adsense.google.com
+  ============================================================ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  <!-- AdSense ad-unit styles -->
+  <style>
+    .ad-unit {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      text-align: center;
+    }
+    .ad-unit ins { display: block; }
+    .ad-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(128,128,128,0.5);
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">DecideNow</a>
+  <div class="nav-links">
+    <a href="/coin-flip.html">Coin Flip</a>
+    <a href="/picker-wheel.html">Spin Wheel</a>
+    <a href="/random-number.html">Random Number</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Random <span>Number</span></h1>
+  <p>Generate a truly random number in any range. Instantly.</p>
+</div>
+
+<!-- Big Number -->
+<div class="number-display">
+  <div class="number-glow" id="glow"></div>
+  <span class="big-number" id="bigNum">?</span>
+  <div class="range-hint" id="rangeHint">Set your range below</div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="9999999999"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="range-row">
+    <div class="range-group">
+      <div class="range-label">Min</div>
+      <input class="range-input" type="number" id="minInput" value="1">
+    </div>
+    <div class="range-sep">—</div>
+    <div class="range-group">
+      <div class="range-label">Max</div>
+      <input class="range-input" type="number" id="maxInput" value="100">
+    </div>
+  </div>
+
+  <!-- Presets -->
+  <div class="presets">
+    <button class="preset-btn" onclick="setPreset(1,6,'dice')">🎲 Dice (1–6)</button>
+    <button class="preset-btn" onclick="setPreset(1,10,'10')">1–10</button>
+    <button class="preset-btn active" onclick="setPreset(1,100,'100')">1–100</button>
+    <button class="preset-btn" onclick="setPreset(1,1000,'1000')">1–1000</button>
+    <button class="preset-btn" onclick="setPreset(0,9,'digit')">0–9</button>
+  </div>
+
+  <button class="btn-generate" id="genBtn" onclick="generate()">Generate</button>
+  <button class="btn-multi" onclick="toggleMulti()">Generate multiple numbers</button>
+</div>
+
+<!-- Multi output -->
+<div class="multi-output" id="multiOutput">
+  <div class="multi-controls">
+    <span class="multi-label">How many?</span>
+    <input class="multi-count" type="number" id="multiCount" value="5" min="2" max="50">
+    <button class="btn-generate" style="width:auto;padding:10px 24px;font-size:15px;margin:0" onclick="generateMulti()">Go</button>
+  </div>
+  <div class="multi-title" id="multiTitle"></div>
+  <div class="multi-grid" id="multiGrid"></div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row" id="statsRow" style="display:none">
+  <div class="stat-card">
+    <span class="stat-n" id="statMin">—</span>
+    <span class="stat-l">Lowest</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-n" id="statCount">0</span>
+    <span class="stat-l">Generated</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-n" id="statMax">—</span>
+    <span class="stat-l">Highest</span>
+  </div>
+</div>
+
+<!-- History -->
+<div class="history-section" id="histSection" style="display:none">
+  <div class="history-title">
+    Recent numbers
+    <button class="clear-hist" onclick="clearHistory()">Clear</button>
+  </div>
+  <div class="history-list" id="histList"></div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1010101010"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- SEO -->
+<div class="content">
+  <h2>Free random number generator</h2>
+  <p>Enter a minimum and maximum value, then click Generate. The result is a cryptographically random integer in your chosen range — every number has exactly equal odds of being selected.</p>
+  <p>Use the quick presets for common ranges (dice, 1–10, 1–100) or enter any range you need. You can also generate multiple numbers at once using the "Generate multiple" option.</p>
+
+  <div class="faq">
+    <div class="faq-item">
+      <h3>Is this truly random?</h3>
+      <p>Yes. We use <code>crypto.getRandomValues()</code> — the same cryptographically secure randomness your browser uses for HTTPS and security keys. Every number is genuinely unpredictable and independent of previous results.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What's the largest range I can use?</h3>
+      <p>You can use any integers as min and max, including negative numbers. The generator handles very large ranges accurately.</p>
+    </div>
+    
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1111111112"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+    <div class="faq-item">
+      <h3>Can I generate lottery numbers?</h3>
+      <p>Yes — use the "Generate multiple" option and set the range to match your lottery (e.g. 1–49 for UK Lotto, 1–69 for Powerball). Note that this is for entertainment — genuine lotteries use certified hardware randomness.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I use negative numbers?</h3>
+      <p>Yes — just type a negative number in the Min field. For example, min −50 and max 50 generates any integer between those values.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Are the multiple numbers unique?</h3>
+      <p>By default, numbers can repeat (sampling with replacement). If you need unique numbers — like for a lottery draw — make sure your range is larger than the count you're generating.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:64px">
+    <div class="section-label">More free tools</div>
+    <div class="tools-grid">
+      <a href="/coin-flip.html" class="tool-card">
+        <span class="tool-icon">🪙</span>
+        <span class="tool-name">Coin Flip</span>
+        <span class="tool-desc">Heads or tails instantly</span>
+      </a>
+      <a href="/picker-wheel.html" class="tool-card">
+        <span class="tool-icon">🎡</span>
+        <span class="tool-name">Spin Wheel</span>
+        <span class="tool-desc">Custom entries, any choice</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  let history = [];
+  let allNums = [];
+  let multiVisible = false;
+
+  function getRand(min, max) {
+    const range = max - min + 1;
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return min + (arr[0] % range);
+  }
+
+  function getInputs() {
+    let min = parseInt(document.getElementById('minInput').value);
+    let max = parseInt(document.getElementById('maxInput').value);
+    if (isNaN(min)) min = 1;
+    if (isNaN(max)) max = 100;
+    if (min > max) { const t = min; min = max; max = t; }
+    return { min, max };
+  }
+
+  function generate() {
+    const { min, max } = getInputs();
+    const num = getRand(min, max);
+
+    const bigNum = document.getElementById('bigNum');
+
+    // Rolling animation
+    let ticks = 0;
+    const maxTicks = 12;
+    bigNum.classList.add('rolling');
+
+    const interval = setInterval(() => {
+      bigNum.textContent = getRand(min, max);
+      ticks++;
+      if (ticks >= maxTicks) {
+        clearInterval(interval);
+        bigNum.classList.remove('rolling');
+        bigNum.textContent = num;
+
+        // Glow
+        const glow = document.getElementById('glow');
+        glow.classList.add('active');
+        setTimeout(() => glow.classList.remove('active'), 800);
+
+        // Range hint
+        document.getElementById('rangeHint').innerHTML =
+          `Between <span>${min}</span> and <span>${max}</span>`;
+
+        // Stats
+        allNums.push(num);
+        history.unshift(num);
+        if (history.length > 20) history.pop();
+        updateStats();
+        updateHistory();
+      }
+    }, 60);
+  }
+
+  function updateStats() {
+    if (allNums.length === 0) return;
+    document.getElementById('statsRow').style.display = 'grid';
+    document.getElementById('statMin').textContent = Math.min(...allNums);
+    document.getElementById('statMax').textContent = Math.max(...allNums);
+    document.getElementById('statCount').textContent = allNums.length;
+  }
+
+  function updateHistory() {
+    document.getElementById('histSection').style.display = 'block';
+    document.getElementById('histList').innerHTML = history.map((n, i) =>
+      `<div class="hist-num">${n}</div>`
+    ).join('');
+  }
+
+  function clearHistory() {
+    history = [];
+    allNums = [];
+    document.getElementById('histSection').style.display = 'none';
+    document.getElementById('statsRow').style.display = 'none';
+  }
+
+  function toggleMulti() {
+    multiVisible = !multiVisible;
+    document.getElementById('multiOutput').style.display = multiVisible ? 'block' : 'none';
+  }
+
+  function generateMulti() {
+    const { min, max } = getInputs();
+    const count = Math.min(50, Math.max(2, parseInt(document.getElementById('multiCount').value) || 5));
+    const nums = Array.from({ length: count }, () => getRand(min, max));
+
+    document.getElementById('multiTitle').textContent =
+      `${count} random numbers between ${min} and ${max}`;
+    document.getElementById('multiGrid').innerHTML = nums.map(n =>
+      `<div class="multi-num">${n}</div>`
+    ).join('');
+  }
+
+  function setPreset(min, max, id) {
+    document.getElementById('minInput').value = min;
+    document.getElementById('maxInput').value = max;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  // Generate on Enter
+  document.getElementById('minInput').addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+  document.getElementById('maxInput').addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+
+  // Clear active preset on manual input
+  ['minInput','maxInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    });
+  });
+</script>
+</body>
+</html>

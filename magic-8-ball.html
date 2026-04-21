@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magic 8 Ball — Free Online Ask & Answer Tool</title>
+<meta name="description" content="Ask the Magic 8 Ball any yes or no question and get an instant mystical answer. Free online Magic 8 Ball with all 20 classic responses.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07080c;
+    --surface: #0e1018;
+    --text: #e8dfc8;
+    --muted: #6b6655;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --positive: #7ec8a0;
+    --negative: #c87e7e;
+    --neutral: #7ea0c8;
+    --border: rgba(201,168,76,0.12);
+    --radius: 16px;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Crimson Pro', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d, 3s) var(--delay, 0s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    from { opacity: var(--min-op, 0.1); transform: scale(1); }
+    to   { opacity: var(--max-op, 0.6); transform: scale(1.3); }
+  }
+
+  /* Fog / vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(7,8,12,0.8) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Nav */
+  nav {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--gold);
+    text-decoration: none;
+    letter-spacing: 1px;
+  }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; font-family: 'Crimson Pro', serif; transition: color 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* Hero text */
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 20px 24px 10px;
+    max-width: 600px;
+  }
+  .hero h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--gold-light);
+    margin-bottom: 10px;
+    text-shadow: 0 0 40px rgba(201,168,76,0.4);
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  /* Question input */
+  .question-section {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+  }
+  .question-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .question-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 14px 24px;
+    font-size: 17px;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .question-input::placeholder { color: #3a3628; }
+  .question-input:focus {
+    border-color: rgba(201,168,76,0.35);
+    box-shadow: 0 0 20px rgba(201,168,76,0.08);
+  }
+
+  /* The Ball */
+  .ball-section {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 40px 0 32px;
+  }
+
+  .ball-container {
+    position: relative;
+    width: min(280px, 72vw);
+    height: min(280px, 72vw);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ball-container:hover .ball-outer {
+    transform: scale(1.03);
+  }
+
+  .ball-outer {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #2a2a2a, #0a0a0a 60%, #000000);
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,0.04),
+      0 30px 80px rgba(0,0,0,0.9),
+      0 0 60px rgba(0,0,0,0.6),
+      inset 0 -20px 40px rgba(0,0,0,0.5),
+      inset 10px -10px 40px rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Highlight gloss */
+  .ball-outer::before {
+    content: '';
+    position: absolute;
+    top: 12%;
+    left: 18%;
+    width: 35%;
+    height: 25%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.12), transparent);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Number 8 label */
+  .ball-eight {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 42%;
+    height: 42%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1a1a1a, #0d0d0d);
+    border: 2px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 6vw, 34px);
+    font-weight: 900;
+    color: rgba(255,255,255,0.85);
+    transition: opacity 0.3s;
+    z-index: 2;
+  }
+
+  /* Answer window */
+  .answer-window {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .answer-window.show { opacity: 1; }
+  .answer-inner {
+    width: 55%;
+    height: 55%;
+    background: radial-gradient(circle, #0d1a2a, #071018);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(100,160,220,0.2);
+    box-shadow: 0 0 20px rgba(80,140,200,0.15), inset 0 0 20px rgba(80,140,200,0.08);
+    padding: 12px;
+  }
+  .answer-text {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(8px, 2vw, 11px);
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+    color: #9dc8f0;
+    text-shadow: 0 0 10px rgba(120,180,240,0.6);
+  }
+  .answer-text.positive { color: var(--positive); text-shadow: 0 0 12px rgba(126,200,160,0.6); }
+  .answer-text.negative { color: var(--negative); text-shadow: 0 0 12px rgba(200,126,126,0.6); }
+  .answer-text.neutral  { color: var(--neutral);  text-shadow: 0 0 12px rgba(126,160,200,0.6); }
+
+  /* Shake animation */
+  .ball-container.shaking .ball-outer {
+    animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    transform: none !important;
+  }
+  @keyframes shake {
+    0%,100% { transform: rotate(0deg) translateX(0); }
+    10% { transform: rotate(-8deg) translateX(-8px); }
+    20% { transform: rotate(8deg)  translateX(8px); }
+    30% { transform: rotate(-6deg) translateX(-6px); }
+    40% { transform: rotate(6deg)  translateX(10px); }
+    50% { transform: rotate(-4deg) translateX(-4px); }
+    60% { transform: rotate(4deg)  translateX(6px); }
+    70% { transform: rotate(-2deg) translateX(-3px); }
+    80% { transform: rotate(2deg)  translateX(3px); }
+    90% { transform: rotate(-1deg) translateX(-1px); }
+  }
+
+  /* Glow pulse on reveal */
+  .ball-container.revealing .ball-outer {
+    animation: glowPulse 0.4s ease;
+  }
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 0 0 2px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(80,140,200,0.4); }
+    100% { box-shadow: 0 0 0 2px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(0,0,0,0.6); }
+  }
+
+  /* CTA */
+  .shake-hint {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 20px;
+    transition: opacity 0.3s;
+  }
+
+  .btn-ask {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 100px;
+    padding: 14px 44px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    margin-top: 28px;
+    display: block;
+    box-shadow: 0 0 20px rgba(201,168,76,0.08);
+  }
+  .btn-ask:hover {
+    background: rgba(201,168,76,0.08);
+    border-color: rgba(201,168,76,0.6);
+    box-shadow: 0 0 30px rgba(201,168,76,0.2);
+  }
+  .btn-ask:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* History */
+  .history-section {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: 0 24px;
+    margin-bottom: 48px;
+  }
+  .hist-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .hist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hist-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hist-answer { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+  .hist-q { font-size: 14px; color: var(--muted); font-style: italic; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* SEO */
+  .content {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    width: 100%;
+    padding: 0 24px 80px;
+  }
+  .content h2 { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; margin-bottom: 16px; color: var(--gold); letter-spacing: 1px; }
+  .content p { font-size: 16px; line-height: 1.8; color: var(--muted); margin-bottom: 12px; }
+  .faq { margin-top: 40px; }
+  .faq-item { border-top: 1px solid var(--border); padding: 18px 0; }
+  .faq-item h3 { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--text); letter-spacing: 0.5px; }
+
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 20px; }
+  .tool-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; text-decoration: none; transition: border-color 0.2s; }
+  .tool-card:hover { border-color: rgba(201,168,76,0.3); }
+  .tool-icon { font-size: 26px; margin-bottom: 8px; display: block; }
+  .tool-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--text); display: block; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .tool-desc { font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+  }
+</style>
+
+  <!-- ============================================================
+       GOOGLE ADSENSE — replace ca-pub-XXXXXXXXXXXXXXXX with your
+       actual Publisher ID from adsense.google.com
+  ============================================================ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  <!-- AdSense ad-unit styles -->
+  <style>
+    .ad-unit {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      text-align: center;
+    }
+    .ad-unit ins { display: block; }
+    .ad-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(128,128,128,0.5);
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<nav>
+  <a href="/" class="logo">DecideNow</a>
+  <div class="nav-links">
+    <a href="/coin-flip.html">Coin Flip</a>
+    <a href="/picker-wheel.html">Spin Wheel</a>
+    <a href="/random-number.html">Random Number</a>
+    <a href="/what-should-i-eat.html">What to Eat</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Magic 8 Ball</h1>
+  <p>The universe has answers. You need only ask.</p>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1212121212"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<div class="question-section">
+  <label class="question-label" for="questionInput">Your question</label>
+  <input class="question-input" id="questionInput" type="text" placeholder="Will everything work out?" maxlength="120">
+</div>
+
+<div class="ball-section">
+  <div class="ball-container" id="ballContainer" onclick="askBall()" title="Click to ask">
+    <div class="ball-outer">
+      <div class="ball-eight" id="ballEight">8</div>
+      <div class="answer-window" id="answerWindow">
+        <div class="answer-inner">
+          <div class="answer-text" id="answerText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="shake-hint" id="shakeHint">Click the ball to reveal your answer</div>
+  <button class="btn-ask" id="askBtn" onclick="askBall()">Ask the Ball</button>
+</div>
+
+<div class="history-section" id="histSection" style="display:none">
+  <div class="hist-label">Readings</div>
+  <div class="hist-list" id="histList"></div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1313131313"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<div class="content">
+  <h2>About the Magic 8 Ball</h2>
+  <p>The original Magic 8 Ball was invented in 1950 and contains 20 responses — 10 positive, 5 neutral, and 5 negative. This digital version faithfully recreates all 20 classic answers with genuine randomness.</p>
+  <p>Ask any yes-or-no question, click the ball, and receive your mystical verdict. Great for decisions, parties, and anywhere you need a little cosmic guidance.</p>
+
+  <div class="faq">
+    <div class="faq-item">
+      <h3>How many answers does it have?</h3>
+      <p>Exactly 20 — the same as the original toy. Ten are positive ("It is certain", "Without a doubt"...), five are neutral ("Reply hazy, try again"...), and five are negative ("Don't count on it"...).</p>
+    </div>
+    
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1414141414"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+    <div class="faq-item">
+      <h3>Is it truly random?</h3>
+      <p>Yes. We use cryptographic randomness so every answer is genuinely unpredictable. No answer is weighted more than another.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I ask the same question twice?</h3>
+      <p>Of course — the ball doesn't remember previous questions. Each shake is completely independent.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:48px">
+    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">More Tools</div>
+    <div class="tools-grid">
+      <a href="/coin-flip.html" class="tool-card">
+        <span class="tool-icon">🪙</span>
+        <span class="tool-name">Coin Flip</span>
+        <span class="tool-desc">Heads or tails</span>
+      </a>
+      <a href="/picker-wheel.html" class="tool-card">
+        <span class="tool-icon">🎡</span>
+        <span class="tool-name">Spin Wheel</span>
+        <span class="tool-desc">Custom entries</span>
+      </a>
+      <a href="/random-number.html" class="tool-card">
+        <span class="tool-icon">🎲</span>
+        <span class="tool-name">Random Number</span>
+        <span class="tool-desc">Any range</span>
+      </a>
+      <a href="/what-should-i-eat.html" class="tool-card">
+        <span class="tool-icon">🍽️</span>
+        <span class="tool-name">What to Eat</span>
+        <span class="tool-desc">Food picker</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Generate stars
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 0.5;
+    s.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      top: ${Math.random() * 100}%;
+      left: ${Math.random() * 100}%;
+      --d: ${2 + Math.random() * 4}s;
+      --delay: ${Math.random() * 4}s;
+      --min-op: ${0.05 + Math.random() * 0.1};
+      --max-op: ${0.3 + Math.random() * 0.5};
+    `;
+    starsEl.appendChild(s);
+  }
+
+  const ANSWERS = [
+    { text: "It is certain",        type: "positive" },
+    { text: "It is decidedly so",   type: "positive" },
+    { text: "Without a doubt",      type: "positive" },
+    { text: "Yes, definitely",      type: "positive" },
+    { text: "You may rely on it",   type: "positive" },
+    { text: "As I see it, yes",     type: "positive" },
+    { text: "Most likely",          type: "positive" },
+    { text: "Outlook good",         type: "positive" },
+    { text: "Yes",                  type: "positive" },
+    { text: "Signs point to yes",   type: "positive" },
+    { text: "Reply hazy, try again", type: "neutral" },
+    { text: "Ask again later",       type: "neutral" },
+    { text: "Better not tell you now", type: "neutral" },
+    { text: "Cannot predict now",    type: "neutral" },
+    { text: "Concentrate and ask again", type: "neutral" },
+    { text: "Don't count on it",    type: "negative" },
+    { text: "My reply is no",       type: "negative" },
+    { text: "My sources say no",    type: "negative" },
+    { text: "Outlook not so good",  type: "negative" },
+    { text: "Very doubtful",        type: "negative" },
+  ];
+
+  const TYPE_COLORS = {
+    positive: '#7ec8a0',
+    neutral:  '#7ea0c8',
+    negative: '#c87e7e',
+  };
+
+  let shaking = false;
+  let history = [];
+
+  function getRand(n) {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % n;
+  }
+
+  function askBall() {
+    if (shaking) return;
+    shaking = true;
+
+    const container = document.getElementById('ballContainer');
+    const eight = document.getElementById('ballEight');
+    const answerWindow = document.getElementById('answerWindow');
+    const answerText = document.getElementById('answerText');
+    const hint = document.getElementById('shakeHint');
+
+    // Hide previous answer
+    answerWindow.classList.remove('show');
+    eight.style.opacity = '1';
+    hint.textContent = '✦ The spirits are consulting ✦';
+
+    container.classList.add('shaking');
+
+    setTimeout(() => {
+      container.classList.remove('shaking');
+      container.classList.add('revealing');
+
+      const answer = ANSWERS[getRand(ANSWERS.length)];
+
+      answerText.textContent = answer.text;
+      answerText.className = `answer-text ${answer.type}`;
+      eight.style.opacity = '0';
+      answerWindow.classList.add('show');
+      hint.textContent = 'Click again for another reading';
+
+      setTimeout(() => container.classList.remove('revealing'), 400);
+
+      // History
+      const q = document.getElementById('questionInput').value.trim();
+      history.unshift({ answer, question: q });
+      if (history.length > 8) history.pop();
+      updateHistory();
+
+      shaking = false;
+    }, 700);
+  }
+
+  function updateHistory() {
+    const section = document.getElementById('histSection');
+    const list = document.getElementById('histList');
+    section.style.display = 'block';
+    list.innerHTML = history.map(h => `
+      <div class="hist-item">
+        <div class="hist-dot" style="background:${TYPE_COLORS[h.answer.type]}"></div>
+        <span class="hist-answer" style="color:${TYPE_COLORS[h.answer.type]}">${h.answer.text}</span>
+        ${h.question ? `<span class="hist-q">${escHtml(h.question)}</span>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Enter key
+  document.getElementById('questionInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') askBall();
+  });
+</script>
+</body>
+</html>

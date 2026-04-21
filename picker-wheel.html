@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Wheel — Free Random Picker & Decision Wheel</title>
+<meta name="description" content="Free online spin wheel. Add your own choices and spin to decide. Perfect for classrooms, giveaways, and making decisions. No signup needed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2330;
+    --text: #f0f2f7;
+    --muted: #6b7280;
+    --accent: #f5c842;
+    --radius: 16px;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 80px;
+  }
+
+  nav {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 58px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 17px; color: var(--muted); font-weight: 300; }
+
+  /* Main Layout */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    width: 100%;
+    max-width: 960px;
+    align-items: start;
+  }
+
+  /* Wheel Container */
+  .wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .wheel-outer {
+    position: relative;
+    width: min(480px, 90vw);
+    height: min(480px, 90vw);
+  }
+
+  .wheel-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* Pointer */
+  .pointer {
+    position: absolute;
+    top: 50%;
+    right: -16px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-right: 36px solid var(--accent);
+    filter: drop-shadow(0 0 8px rgba(245,200,66,0.6));
+    z-index: 10;
+  }
+
+  /* Center button */
+  .spin-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 4px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.15s, border-color 0.2s;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .spin-center:hover { transform: translate(-50%, -50%) scale(1.08); border-color: var(--accent); }
+  .spin-center span {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  /* Spin button */
+  .btn-spin {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--accent);
+    color: #1a1200;
+    border: none;
+    border-radius: 100px;
+    padding: 16px 52px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 32px rgba(245,200,66,0.3);
+    letter-spacing: 0.3px;
+  }
+  .btn-spin:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,200,66,0.4); }
+  .btn-spin:active { transform: translateY(0); }
+  .btn-spin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Result */
+  .result-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 14px 32px;
+    min-width: 260px;
+    text-align: center;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+  .result-banner.has-result {
+    border-color: rgba(245,200,66,0.4);
+    background: rgba(245,200,66,0.06);
+  }
+  .result-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: -0.5px;
+  }
+  .result-banner.has-result .result-text { color: var(--accent); }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: sticky;
+    top: 24px;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .entry-count {
+    font-size: 12px;
+    background: rgba(255,255,255,0.07);
+    padding: 3px 10px;
+    border-radius: 100px;
+    color: var(--muted);
+    font-weight: 400;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-height: 340px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+
+  .entry-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    transition: border-color 0.2s;
+  }
+  .entry-item:hover { border-color: rgba(255,255,255,0.15); }
+  .entry-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .entry-text {
+    font-size: 14px;
+    flex: 1;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .entry-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .entry-del:hover { color: #ef4444; }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .add-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .add-input:focus { border-color: rgba(245,200,66,0.4); }
+  .add-input::placeholder { color: var(--muted); }
+
+  .btn-add {
+    background: rgba(245,200,66,0.12);
+    border: 1px solid rgba(245,200,66,0.2);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .btn-add:hover { background: rgba(245,200,66,0.2); }
+
+  .sidebar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-clear {
+    flex: 1;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-clear:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  /* History panel */
+  .history-panel {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .history-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .history-item {
+    font-size: 13px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* SEO */
+  .content {
+    max-width: 960px;
+    width: 100%;
+    margin-top: 80px;
+  }
+  .content h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .content p { font-size: 16px; line-height: 1.75; color: #9ca3af; margin-bottom: 12px; }
+  .faq { margin-top: 40px; }
+  .faq-item { border-top: 1px solid var(--border); padding: 20px 0; }
+  .faq-item h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .tool-card:hover { border-color: rgba(245,200,66,0.3); }
+  .tool-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .tool-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); display: block; margin-bottom: 4px; }
+  .tool-desc { font-size: 12px; color: var(--muted); }
+  .history-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; text-align: left; }
+
+  @media (max-width: 720px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .nav-links { display: none; }
+    .hero h1 { font-size: 32px; letter-spacing: -1px; }
+  }
+</style>
+
+  <!-- ============================================================
+       GOOGLE ADSENSE — replace ca-pub-XXXXXXXXXXXXXXXX with your
+       actual Publisher ID from adsense.google.com
+  ============================================================ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  <!-- AdSense ad-unit styles -->
+  <style>
+    .ad-unit {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      text-align: center;
+    }
+    .ad-unit ins { display: block; }
+    .ad-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(128,128,128,0.5);
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">DecideNow</a>
+  <div class="nav-links">
+    <a href="/coin-flip.html">Coin Flip</a>
+    <a href="/picker-wheel.html">Spin Wheel</a>
+    <a href="/random-number.html">Random Number</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Spin the <span>Wheel</span></h1>
+  <p>Add your choices, spin, and let fate decide. Free forever.</p>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="6666666666"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<div class="main">
+  <!-- Wheel -->
+  <div class="wheel-section">
+    <div class="wheel-outer">
+      <canvas class="wheel-canvas" id="wheelCanvas"></canvas>
+      <div class="pointer"></div>
+      <div class="spin-center" onclick="spin()">
+        <span>SPIN</span>
+      </div>
+    </div>
+
+    <div class="result-banner" id="resultBanner">
+      <span class="result-text" id="resultText">Spin the wheel!</span>
+    </div>
+
+    <button class="btn-spin" id="spinBtn" onclick="spin()">Spin Now</button>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-title">
+      Entries
+      <span class="entry-count" id="entryCount">6</span>
+    </div>
+
+    <div class="entries-list" id="entriesList"></div>
+
+    <div class="add-row">
+      <input class="add-input" id="addInput" type="text" placeholder="Add an entry..." maxlength="40">
+      <button class="btn-add" onclick="addEntry()">+</button>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn-clear" onclick="clearAll()">Clear all</button>
+      <button class="btn-clear" onclick="loadDefaults()">Reset defaults</button>
+    </div>
+
+    <div class="history-panel" id="historyPanel" style="display:none">
+      <div class="history-title">Spin history</div>
+      <div class="history-items" id="historyItems"></div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="7777777777"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+<!-- SEO Content -->
+<div class="content">
+  <h2>Free online spin wheel</h2>
+  <p>Add any choices to the wheel, click Spin, and get a random result. Great for picking a winner in a giveaway, deciding what to eat, selecting a student in class, or any decision you want to leave to chance.</p>
+  <p>Every spin uses <code>crypto.getRandomValues()</code> for genuine randomness — not the basic Math.random() that most tools use.</p>
+
+  <div class="faq">
+    <div class="faq-item">
+      <h3>How do I add my own choices?</h3>
+      <p>Type your entry in the text box on the right and press + or hit Enter. You can add up to 30 entries. To remove one, click the × next to it.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Is the spin truly random?</h3>
+      <p>Yes — we use cryptographic randomness so every segment has exactly equal odds. There's no way to rig the result.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I use this for classroom name picking?</h3>
+      <p>Absolutely. Add all your students' names and spin. You can remove a name after it's been picked to ensure everyone gets a turn.</p>
+    </div>
+    
+  <!-- AD SLOT: Advertisement
+       Replace data-ad-slot value with your real ad unit ID from AdSense -->
+  <div class="ad-unit">
+    <div class="ad-label">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="8888888888"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+    <div class="faq-item">
+      <h3>Can I use this for a giveaway?</h3>
+      <p>Yes — add all participant names and spin. The result is random and fair, making it perfect for prize draws and competitions.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:64px">
+    <div class="history-label">More free tools</div>
+    <div class="tools-grid">
+      <a href="/coin-flip.html" class="tool-card">
+        <span class="tool-icon">🪙</span>
+        <span class="tool-name">Coin Flip</span>
+        <span class="tool-desc">Heads or tails instantly</span>
+      </a>
+      <a href="/random-number.html" class="tool-card">
+        <span class="tool-icon">🎲</span>
+        <span class="tool-name">Random Number</span>
+        <span class="tool-desc">Any range, any time</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = [
+  '#f5c842','#e85d26','#6366f1','#10b981','#ec4899',
+  '#3b82f6','#f97316','#8b5cf6','#14b8a6','#ef4444',
+  '#84cc16','#06b6d4','#d946ef','#fb923c','#22c55e',
+];
+
+let entries = [];
+let spinning = false;
+let currentAngle = 0;
+let spinHistory = [];
+
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+
+function setDefaults() {
+  return [
+    'Option 1','Option 2','Option 3',
+    'Option 4','Option 5','Option 6',
+  ];
+}
+
+function loadDefaults() {
+  entries = setDefaults();
+  renderSidebar();
+  drawWheel();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('entriesList');
+  list.innerHTML = entries.map((e, i) => `
+    <div class="entry-item">
+      <div class="entry-color" style="background:${COLORS[i % COLORS.length]}"></div>
+      <span class="entry-text">${escHtml(e)}</span>
+      <button class="entry-del" onclick="removeEntry(${i})">×</button>
+    </div>
+  `).join('');
+  document.getElementById('entryCount').textContent = entries.length;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addEntry() {
+  const inp = document.getElementById('addInput');
+  const val = inp.value.trim();
+  if (!val || entries.length >= 30) return;
+  entries.push(val);
+  inp.value = '';
+  renderSidebar();
+  drawWheel();
+}
+
+function removeEntry(i) {
+  entries.splice(i, 1);
+  renderSidebar();
+  drawWheel();
+}
+
+function clearAll() {
+  entries = [];
+  renderSidebar();
+  drawWheel();
+}
+
+function drawWheel(angle) {
+  const size = canvas.width;
+  const cx = size / 2, cy = size / 2, r = size / 2 - 4;
+  ctx.clearRect(0, 0, size, size);
+
+  if (entries.length === 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e2330';
+    ctx.fill();
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `bold 16px 'Syne', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Add entries', cx, cy);
+    return;
+  }
+
+  const n = entries.length;
+  const arc = (Math.PI * 2) / n;
+  const rot = (angle !== undefined ? angle : currentAngle) - Math.PI / 2;
+
+  for (let i = 0; i < n; i++) {
+    const start = rot + i * arc;
+    const end = start + arc;
+
+    // Segment
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.font = `bold ${n > 12 ? 11 : 14}px 'DM Sans', sans-serif`;
+    const label = entries[i].length > 16 ? entries[i].slice(0, 15) + '…' : entries[i];
+    ctx.fillText(label, r - 12, 5);
+    ctx.restore();
+  }
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 36, 0, Math.PI * 2);
+  ctx.fillStyle = '#0d0f14';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function spin() {
+  if (spinning || entries.length < 2) return;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const resultBanner = document.getElementById('resultBanner');
+  const resultText = document.getElementById('resultText');
+  resultBanner.classList.remove('has-result');
+  resultText.textContent = 'Spinning…';
+
+  // Pick winner with crypto random
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  const winner = arr[0] % entries.length;
+
+  // Calculate target angle
+  const n = entries.length;
+  const arc = (Math.PI * 2) / n;
+  const extraSpins = (5 + Math.floor(Math.random() * 5)) * Math.PI * 2;
+  // Land so winner segment is at top (pointer at right = angle offset)
+  const targetSegCenter = (winner * arc) + arc / 2;
+  const targetAngle = currentAngle + extraSpins + (Math.PI * 2 - (currentAngle % (Math.PI * 2)) - targetSegCenter + Math.PI / 2);
+
+  const duration = 4000 + Math.random() * 1500;
+  const startAngle = currentAngle;
+  const startTime = performance.now();
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const easedT = easeOut(t);
+    const angle = startAngle + (targetAngle - startAngle) * easedT;
+
+    drawWheel(angle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      currentAngle = targetAngle;
+      spinning = false;
+      document.getElementById('spinBtn').disabled = false;
+
+      resultText.textContent = entries[winner];
+      resultBanner.classList.add('has-result');
+
+      spinHistory.unshift({ label: entries[winner], color: COLORS[winner % COLORS.length] });
+      if (spinHistory.length > 10) spinHistory.pop();
+      updateHistory();
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function updateHistory() {
+  const panel = document.getElementById('historyPanel');
+  const items = document.getElementById('historyItems');
+  panel.style.display = 'block';
+  items.innerHTML = spinHistory.map(h =>
+    `<div class="history-item">
+      <div class="history-dot" style="background:${h.color}"></div>
+      ${escHtml(h.label)}
+    </div>`
+  ).join('');
+}
+
+// Resize canvas
+function resizeCanvas() {
+  const size = Math.min(480, window.innerWidth * 0.9);
+  canvas.width = size;
+  canvas.height = size;
+  drawWheel();
+}
+
+// Enter key to add
+document.getElementById('addInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addEntry();
+});
+
+loadDefaults();
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+</script>
+</body>
+</html>
